@@ -6,20 +6,20 @@ require_once __DIR__ . '/../helpers/Response.php';
 class Patient_Ctrl
 {
 
-    public function index()
+    public function index($request)
     {
 
         $patientModel = new Patient();
 
-        $patients = $patientModel->getAll();
+        $patients = $patientModel->getAll($request);
 
         Response::json(true, 'Patient List', $patients);
     }
-    public function show($id)
+    public function show($id,$request)
     {
         $patientModel = new Patient();
 
-        $patients = $patientModel->getById($id);
+        $patients = $patientModel->getById($id,$request);
         
         if(!$patients)
             {
@@ -46,44 +46,66 @@ class Patient_Ctrl
 
         $patientModel = new Patient();
 
-        $patientModel->create(
+        $created = $patientModel->create(
             $name,
             $age,
             $gender,
             $phone,
-            $address
+            $address,
+            $request
         );
+
+        if (!$created)
+        {
+            Response::json(false, 'Patient Creation Failed', [], 500);
+        }
 
         Response::json(true, 'Patient Created');
     }
 
-    public function update($request, $id)
+    public function update($id,$request)
     {
 
         $body = $request['body'];
 
+        $name = $body['name'] ?? '';
+        $age = $body['age'] ?? '';
+        $gender = $body['gender'] ?? '';
+        $phone = $body['phone'] ?? '';
+        $address = $body['address'] ?? '';
+
         $patientModel = new Patient();
 
-        $patientModel->update(
+        $updated = $patientModel->update(
             $id,
-            $body['name'],
-            $body['age'],
-            $body['gender'],
-            $body['phone'],
-            $body['address']
+            $name,
+            $age,
+            $gender,
+            $phone,
+            $address,
+            $request
         );
+
+        if (!$updated)
+        {
+            Response::json(false, 'Patient Update Failed or Unauthorized', [], 400);
+        }
 
         Response::json(true, 'Patient Updated');
     }
 
-    public function delete($id)
+    public function delete($id, $request)
     {
-
         $patientModel = new Patient();
 
-        $patientModel->delete($id);
+        $deleted = $patientModel->delete($id, $request);
 
-        Response::json(true, 'Patient Deleted');
+        if (!$deleted)
+        {
+            Response::json(false, 'Patient Delete Failed or Unauthorized', [], 400);
+        }
+
+        Response::json(true, 'Patient Deleted Successfully');
     }
 }
 

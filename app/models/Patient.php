@@ -12,12 +12,18 @@ class Patient
         $this->conn = Database::connect();
     }
 
-    public function getAll()
+    public function getAll($request)
     {
+        $userId = $request['user']['user_id'];
+        $sql = "SELECT * FROM patients WHERE user_id = ? ORDER BY id DESC";
 
-        $sql = "SELECT * FROM patients ORDER BY id DESC";
+        $stmt = $this->conn->prepare($sql);
 
-        $result = $this->conn->query($sql);
+        $stmt->bind_param("i", $userId);
+
+        $stmt->execute();
+
+        $result = $stmt->get_result();
 
         $patients = [];
 
@@ -27,46 +33,25 @@ class Patient
 
         return $patients;
     }
-    public function getById($id)
+    public function getById($id,$request)
     {
-
-        $sql = "SELECT * FROM patients WHERE id = ?";
+        $userId = $request['user']['user_id'];
+        $sql = "SELECT * FROM patients WHERE id = ? AND user_id = ?";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i",$id);
+        $stmt->bind_param("ii",$id,$userId);
         $stmt->execute();
 
         $result = $stmt->get_result();
         return $result->fetch_assoc();
     }
 
-    public function create($name, $age, $gender, $phone, $address)
+    public function create($name, $age, $gender, $phone, $address,$request)
     {
+        $userId = $request['user']['user_id'];
 
-        $sql = "INSERT INTO patients(name,age,gender,phone,address)
-                VALUES(?,?,?,?,?)";
-
-        $stmt = $this->conn->prepare($sql);
-
-        $stmt->bind_param
-        (
-            "sisss",
-            $name,
-            $age,
-            $gender,
-            $phone,
-            $address
-        );
-
-        return $stmt->execute();
-    }
-
-    public function update($id, $name, $age, $gender, $phone, $address)
-    {
-
-        $sql = "UPDATE patients
-                SET name=?, age=?, gender=?, phone=?, address=?
-                WHERE id=?";
+        $sql = "INSERT INTO patients(name,age,gender,phone,address,user_id)
+                VALUES(?,?,?,?,?,?)";
 
         $stmt = $this->conn->prepare($sql);
 
@@ -77,21 +62,43 @@ class Patient
             $age,
             $gender,
             $phone,
-            $address,
-            $id
+            $address, $userId
         );
 
         return $stmt->execute();
     }
 
-    public function delete($id)
+    public function update($id, $name, $age, $gender, $phone, $address,$request)
     {
-
-        $sql = "DELETE FROM patients WHERE id=?";
+        $userId = $request['user']['user_id'];
+        $sql = "UPDATE patients
+                SET name=?, age=?, gender=?, phone=?, address=?
+                WHERE id=? AND user_id = ?";
 
         $stmt = $this->conn->prepare($sql);
 
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param
+        (
+            "sisssii",
+            $name,
+            $age,
+            $gender,
+            $phone,
+            $address,
+            $id, $userId
+        );
+
+        return $stmt->execute();
+    }
+
+    public function delete($id,$request)
+    {
+        $userId = $request['user']['user_id'];
+        $sql = "DELETE FROM patients WHERE id=? AND user_id = ?";
+
+        $stmt = $this->conn->prepare($sql);
+
+        $stmt->bind_param("ii", $id,$userId);
 
         return $stmt->execute();
     }

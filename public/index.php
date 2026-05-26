@@ -50,37 +50,47 @@ $router->add('POST', '/app/login', function() use ($authController, $request) {
 
 $router->add('GET', '/app/patients', function() use ($patientController) {
 
-    AuthMiddleware::handle();
+    $user = AuthMiddleware::handle();
 
-    $patientController->index();
+    $request['user'] = $user;
+
+    $patientController->index($request);
 });
 
 $router->add('GET', '/app/patients/{id}', function($id) use ($patientController) {
 
-    AuthMiddleware::handle();
+    $user = AuthMiddleware::handle();
 
-    $patientController->show($id);
+    $request['user'] = $user;
+
+    $patientController->show($id,$request);
 });
 
 $router->add('POST', '/app/patients', function() use ($patientController, $request) {
 
-    AuthMiddleware::handle();
+    $user = AuthMiddleware::handle();
+
+    $request['user'] = $user;
 
     $patientController->create($request);
 });
 
 $router->add('PUT', '/app/patients/{id}', function($id) use ($patientController, $request) {
 
-    AuthMiddleware::handle();
+    $user = AuthMiddleware::handle();
 
-    $patientController->update($request, $id);
+    $request['user'] = $user;
+
+    $patientController->update($id,$request);
 });
 
 $router->add('DELETE', '/app/patients/{id}', function($id) use ($patientController) {
 
-    AuthMiddleware::handle();
+    $user = AuthMiddleware::handle();
 
-    $patientController->delete($id);
+    $request['user'] = $user;
+
+    $patientController->delete($id,$reques);
 });
 
 $router->dispatch($method, $url);

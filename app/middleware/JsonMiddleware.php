@@ -26,7 +26,7 @@ class JsonMiddleware
                 Response::json(false, 'Request body is empty...', [], 400);
             }
 
-            $decoded = json_decode($input, true);
+            $decoded = json_decode($input, true);  // converts json to php array(true)
 
             if (json_last_error() !== JSON_ERROR_NONE) {
                 Response::json(false, 'Invalid JSON', [], 400);
