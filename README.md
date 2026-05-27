@@ -69,15 +69,17 @@ The API provides secure user authentication, protected routes, refresh token han
 
 ### Authentication
 
-- POST /api/register
-- POST /api/login
+- POST /app/register
+- POST /app/login
+- POST /app/logout
+- POST /app/refresh
 
 ### Patients
 
-- GET /api/patients
-- POST /api/patients
-- PUT /api/patients/{id}
-- DELETE /api/patients/{id}
+- GET /app/patients
+- POST /app/patients
+- PUT /app/patients/{id}
+- DELETE /app/patients/{id}
 
 ## Security Features
 
