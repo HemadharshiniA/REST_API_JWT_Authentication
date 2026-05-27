@@ -60,17 +60,122 @@ class Auth_Ctrl
                     Response::json(false,'Invalid Password..!!',[],401);
                 }
             
-                $token = JWT::generate
-                ([
+            $accessToken = JWT::generate
+            ([
                     'user_id' => $user['id'],
                     'email' => $user['email']
-                ]);
+            ]);
 
-                Response::json(true,'Login Successful..!!',
-                [
-                    'token' => $token,
-                    'expires_in' => $_ENV['JWT_EXPIRY']
-                ]);
+            $refreshToken = bin2hex(random_bytes(40));
+
+            $expiryDate = date
+            (
+                'Y-m-d H:i:s', strtotime("+" . $_ENV['REFRESH_TOKEN_EXPIRY_DAYS'] . " days")
+            );
+
+            $userModel->storeRefreshToken
+            (
+                $user['id'],$refreshToken, $expiryDate
+            );
+
+            setcookie
+            (
+                     'refresh_token', $refreshToken,
+                        [
+                            'expires' => time() + ($_ENV['REFRESH_TOKEN_EXPIRY_DAYS'] * 24 * 60 * 60),
+                            'path' => '/',
+                            'httponly' => true,
+                            'samesite' => 'Strict'
+                        ]
+            );
+
+            Response::json(true,'Login Successful..!!',
+                        [
+                            'access_token' => $accessToken,
+                            'expires_in' => $_ENV['ACCESS_TOKEN_EXPIRY']
+                        ]
+            );
+    }
+    //Refresh Method
+
+    public function refresh()
+    {
+        if (!isset($_COOKIE['refresh_token']))
+        {
+            Response::json(false,'Refresh token missing', [], 401);
+        }
+
+        $refreshToken = $_COOKIE['refresh_token'];
+
+        $userModel = new User();
+
+        $user = $userModel->findByRefreshToken($refreshToken);
+
+        if (!$user)
+        {
+            Response::json(false, 'Invalid or Expired Refresh Token',[],401);
+        }
+
+        $newAccessToken = JWT::generate
+        ([
+            'user_id' => $user['id'],
+            'email' => $user['email']
+        ]);
+
+        // Sliding expiry
+
+        $newExpiry = date('Y-m-d H:i:s', strtotime("+" . $_ENV['REFRESH_TOKEN_EXPIRY_DAYS'] . " days"));
+
+        $userModel->storeRefreshToken($user['id'], $refreshToken, $newExpiry);
+
+        setcookie('refresh_token',$refreshToken,
+            [
+                'expires' => time() + ($_ENV['REFRESH_TOKEN_EXPIRY_DAYS'] * 24 * 60 * 60),
+                'path' => '/',
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]
+        );
+
+        Response::json(true,'New Access Token Generated...!!',
+            [
+                'access_token' => $newAccessToken,
+                'expires_in' => $_ENV['ACCESS_TOKEN_EXPIRY']
+            ]
+        );
+    }
+
+    // Logout 
+    
+    public function logout()
+    {
+        if (!isset($_COOKIE['refresh_token']))
+        {
+            Response::json(false, 'Already Logged Out....');
+        }
+
+        $refreshToken = $_COOKIE['refresh_token'];
+
+        $userModel = new User();
+
+        $user = $userModel->findByRefreshToken($refreshToken);
+
+        if ($user)
+        {
+            $userModel->removeRefreshToken($user['id']);
+        }
+
+        setcookie(
+            'refresh_token','',
+            [
+                'expires' => time() - 3600,
+                'path' => '/',
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]
+        );
+
+        Response::json(true,'Logout Successful....!!');
     }
 }
 

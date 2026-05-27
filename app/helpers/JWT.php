@@ -23,7 +23,7 @@ class JWT
         ]);
 
         $issuedAt = time();
-        $expiry = $issuedAt + $_ENV['JWT_EXPIRY'];
+        $expiry = $issuedAt + $_ENV['ACCESS_TOKEN_EXPIRY'];
 
         $payload['iat'] = $issuedAt;
         $payload['exp'] = $expiry;

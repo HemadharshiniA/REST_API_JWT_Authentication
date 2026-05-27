@@ -46,6 +46,14 @@ $router->add('POST', '/app/login', function() use ($authController, $request) {
     $authController->login($request);
 });
 
+$router->add('POST', '/app/refresh', function() use ($authController) {
+    $authController->refresh();
+});
+
+$router->add('POST', '/app/logout', function() use ($authController) {
+    $authController->logout();
+});
+
 // PROTECTED ROUTES
 
 $router->add('GET', '/app/patients', function() use ($patientController) {
